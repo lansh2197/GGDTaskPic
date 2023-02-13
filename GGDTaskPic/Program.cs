@@ -17,12 +17,30 @@ using System.Windows.Forms;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Collections;
 
 namespace GGDTaskPic
 {
+    class ColorCompare : IEqualityComparer<Color>
+    {
+        public bool Equals(Color x, Color y)
+        {
+            return x.R == y.R && x.G == y.G && x.B == y.B;
+        }
+
+        public int GetHashCode(Color o)
+        {
+            int hash = 17;
+            // Suitable nullity checks etc, of course :)
+            hash = hash * 23 + o.R.GetHashCode();
+            hash = hash * 23 + o.G.GetHashCode();
+            hash = hash * 23 + o.B.GetHashCode();
+            return hash;
+        }
+    }
+
     class Program
     {
-
         static int ColorDiff(Color l, Color r)
         {
             int res = 0;
@@ -136,7 +154,7 @@ namespace GGDTaskPic
             Console.WriteLine();
         }
 
-        static List<string> DirSearch(string sDir)
+        static List<string> DirSearch(string sDir, int depth = -1)
         {
             List<string> res = new List<string>();
             try
@@ -147,7 +165,15 @@ namespace GGDTaskPic
                 }
                 foreach (string d in Directory.GetDirectories(sDir))
                 {
-                    DirSearch(d);
+                    if(-1 == depth)
+                    {
+                        DirSearch(d, depth);
+                    }
+                    if (depth > 1 )
+                    {
+                        DirSearch(d, depth - 1);
+                    }
+
                 }
             }
             catch (System.Exception excpt)
@@ -159,8 +185,7 @@ namespace GGDTaskPic
 
         private static double CalculateColorDistance(Color l, Color r)
         {
-            double d = Math.Sqrt(Math.Pow((int)l.R - (int)r.R, 2) + Math.Pow((int)l.G - (int)r.G, 2) + Math.Pow((int)l.B - (int)r.B, 2));
-            return d;
+            return CalculateColorDistance(l.R, l.G, l.B, r.R, r.G, r.B);
         }
 
         private static double CalculateColorDistance(Byte lr, Byte lg, Byte lb, Byte rr, Byte rg, Byte rb)
@@ -235,6 +260,7 @@ namespace GGDTaskPic
                 b.Save(saveName);
             }
         }
+
         private static void DisplayColorList(List<String> colors, int colCount = -1, string saveName = "")
         {
             DisplayColorList(colors.Select((String c) => System.Drawing.ColorTranslator.FromHtml(c)).ToList(), colCount, saveName);
@@ -397,13 +423,13 @@ namespace GGDTaskPic
                 7,
                 15,
                 3,
+                1,
                 2,
+                9,
+                22,
                 5,
                 6,
                 13,
-                9,
-                22,
-                1,
                 4,
                 11,
                 19,
@@ -424,10 +450,10 @@ namespace GGDTaskPic
                 36,
                 34,
                 21,
-                19,
-                9,
+                18,
+                8,
                 16,
-                19,
+                10,
                 38,
                 0
             };
@@ -442,7 +468,7 @@ namespace GGDTaskPic
                 for (int i = 0; i < tasks.Count; ++i)
                 {
                     Console.Write(tasksAdjusted[i][j]);
-                    if(i < tasks.Count-1)
+                    if (i < tasks.Count - 1)
                     {
                         Console.Write(", ");
                     }
@@ -558,6 +584,7 @@ namespace GGDTaskPic
             }
             return;
         }
+
         static List<int[]> FindCenterOfMapClusters(ref Bitmap b)
         {
             List<int[]> ret = new List<int[]>();
@@ -598,29 +625,13 @@ namespace GGDTaskPic
             return ret;
         }
 
-        static void PrintClusterCenter()
+        static void MarkTaskPositions(ref Bitmap b, List<int[]> tasks, string outputPath)
         {
-            Bitmap b = (Bitmap)Image.FromFile("S:\\GGD\\Map\\output\\all_tasks_position.bmp");
-            List<int[]> foundTasks = FindCenterOfMapClusters(ref b);
-            /*            foreach (int[] x in ret)
-                        {
-                            Console.WriteLine("{" + x[0] + ", " + x[1] + "},");
-                        }*/
+
             Bitmap output = b.Clone(new Rectangle(0, 0, b.Width, b.Height), b.PixelFormat);
-            /*            foreach (int[] x in ret)
-                        {
-                            for (int i = -2; i <= 2; ++i)
-                            {
-                                for (int j = -2; j <= 2; ++j)
-                                {
-                                    Color ccc = Color.Red;
-                                    output.SetPixel(x[0] + i, x[1] + j, ccc);
-                                }
-                            }
-                        }*/
 
             int idx = 0;
-            foreach (int[] task in foundTasks)
+            foreach (int[] task in tasks)
             {
                 /*
                                 for (int i = -2; i <= 2; ++i)
@@ -646,9 +657,78 @@ namespace GGDTaskPic
                 graphic.Flush();
             }
 
-            output.Save("S:\\GGD\\Map\\output\\all_tasks_position_marked.bmp");
+            output.Save(outputPath);
+
         }
 
+        static void PrintClusterCenter()
+        {
+            Bitmap b = (Bitmap)Image.FromFile("S:\\GGD\\Map\\output\\all_tasks_position.bmp");
+            List<int[]> tasks = FindCenterOfMapClusters(ref b);
+            MarkTaskPositions(ref b, tasks, "S:\\GGD\\Map\\output\\all_tasks_position_marked.bmp");
+
+            int[] adjustedTaskSequence = new int[]
+            {
+                20,
+                14,
+                12,
+                7,
+                15,
+                3,
+                1,
+                2,
+                9,
+                22,
+                5,
+                6,
+                13,
+                4,
+                11,
+                19,
+                24,
+                23,
+                27,
+                31,
+                17,
+                32,
+                35,
+                37,
+                29,
+                26,
+                28,
+                25,
+                30,
+                33,
+                36,
+                34,
+                21,
+                18,
+                8,
+                16,
+                10,
+                38,
+                0
+            };
+
+            List<int[]> tasksAdjusted = new List<int[]>();
+            for (int i = 0; i < tasks.Count; ++i)
+            {
+                tasksAdjusted.Add(tasks[adjustedTaskSequence[i]]);
+            }
+            for (int j = 0; j < 2; ++j)
+            {
+                for (int i = 0; i < tasks.Count; ++i)
+                {
+                    Console.Write(tasksAdjusted[i][j]);
+                    if (i < tasks.Count - 1)
+                    {
+                        Console.Write(", ");
+                    }
+                }
+                Console.WriteLine();
+            }
+            MarkTaskPositions(ref b, tasksAdjusted, "S:\\GGD\\Map\\output\\all_tasks_position_marked_in_sequence.bmp");
+        }
 
         static void IdentifyTasks()
         {
@@ -1212,18 +1292,63 @@ namespace GGDTaskPic
             }
         }
 
+        static void GetBackgroundImage(string folderPath, int[,] interestedArea)
+        {
+            ColorCompare colorComp = new ColorCompare();
+
+            List<string> pathes = DirSearch(folderPath);
+            List<Bitmap> images = new List<Bitmap>();
+            for (int i = 0; i < pathes.Count; ++i)
+            {
+                images.Add((Bitmap)Image.FromFile(pathes[i]));
+            }
+
+            Bitmap b = images[0];
+            Bitmap res = b.Clone(new Rectangle(0, 0, b.Width, b.Height), b.PixelFormat);
+
+            for (int i = 0; i < interestedArea.GetLength(0); ++i)
+            {
+                int lx = interestedArea[i, 0];
+                int ly = interestedArea[i, 1];
+                int rx = interestedArea[i, 2];
+                int ry = interestedArea[i, 3];
+
+                for (int x = lx; x < rx; ++x)
+                {
+                    for (int y = ly; y < ry; ++y)
+                    {
+                        Dictionary<Color, int> colorDict = new Dictionary<Color, int>(colorComp);
+                        for (int k = 0; k < images.Count; ++k)
+                        {
+                            Bitmap image = images[k];
+                            Color color = image.GetPixel(x, y);
+                            if(!colorDict.ContainsKey(color))
+                            {
+                                colorDict[color] = 0;
+                            }
+                            colorDict[color]++;
+                        }
+                        Color c = new Color();
+                        foreach (KeyValuePair<Color, int> item in colorDict.OrderByDescending(key => key.Value))
+                        {
+                            c = item.Key;
+                            break;
+                        }
+                        res.SetPixel(x, y, c);
+                    }
+                }
+            }
+            res.Save(folderPath + "\\background_gen.bmp");
+        }
+
         static void Main(string[] args)
         {
             //GenerateBackGroundImage();
             //PrintClusterCenter();
             //IdentifyTasks();
-            GetAllTaskPositions();
+            //GetAllTaskPositions();
             PrintClusterCenter();
-            /*
-            SetCursorPos(50, 200);
-            mouse_event(MOUSEEVENTF_LEFTDOWN, 50, 200, 0, 0);
-            SetCursorPos(100, 200);
-            */
+            //GetBackgroundImage("S:\\GGD\\Map\\", new int[,] { { 247, 144, 1032, 730 } });
         }
     }
 }
