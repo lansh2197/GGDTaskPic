@@ -317,7 +317,7 @@ namespace GGDTaskPic
                     */
                     bool found = false;
                     int decisionThreshold1 = 30000;
-                   
+
                     for (int k = 0; k < images.Count; ++k)
                     {
                         Color c = images[k].GetPixel(x, y);
@@ -336,13 +336,6 @@ namespace GGDTaskPic
 
                 }
                 Console.WriteLine(y);
-            }
-
-            List<int[]> tasks = FindCenterOfMapClusters(ref res);
-
-            foreach (int[] x in tasks)
-            {
-                Console.WriteLine("{" + x[0] + ", " + x[1] + "},");
             }
 
             /*
@@ -388,6 +381,75 @@ namespace GGDTaskPic
                 {938, 322}
             };
             */
+
+            List<int[]> tasks = FindCenterOfMapClusters(ref res);
+
+            foreach (int[] x in tasks)
+            {
+                Console.WriteLine("{" + x[0] + ", " + x[1] + "},");
+            }
+
+            int[] adjustedTaskSequence = new int[]
+            {
+                20,
+                14,
+                12,
+                7,
+                15,
+                3,
+                2,
+                5,
+                6,
+                13,
+                9,
+                22,
+                1,
+                4,
+                11,
+                19,
+                24,
+                23,
+                27,
+                31,
+                17,
+                32,
+                35,
+                37,
+                29,
+                26,
+                28,
+                25,
+                30,
+                33,
+                36,
+                34,
+                21,
+                19,
+                9,
+                16,
+                19,
+                38,
+                0
+            };
+
+            List<int[]> tasksAdjusted = new List<int[]>();
+            for (int i = 0; i < tasks.Count; ++i)
+            {
+                tasksAdjusted.Add(tasks[adjustedTaskSequence[i]]);
+            }
+            for (int j = 0; j < 2; ++j)
+            {
+                for (int i = 0; i < tasks.Count; ++i)
+                {
+                    Console.Write(tasksAdjusted[i][j]);
+                    if(i < tasks.Count-1)
+                    {
+                        Console.Write(", ");
+                    }
+                }
+                Console.WriteLine();
+            }
+
 
             // This threshold can be calculated by getting all distances of all task
             // points on a maps, get the decision threshold between 5th and 6th ranked
@@ -540,34 +602,35 @@ namespace GGDTaskPic
         {
             Bitmap b = (Bitmap)Image.FromFile("S:\\GGD\\Map\\output\\all_tasks_position.bmp");
             List<int[]> foundTasks = FindCenterOfMapClusters(ref b);
-/*            foreach (int[] x in ret)
-            {
-                Console.WriteLine("{" + x[0] + ", " + x[1] + "},");
-            }*/
+            /*            foreach (int[] x in ret)
+                        {
+                            Console.WriteLine("{" + x[0] + ", " + x[1] + "},");
+                        }*/
             Bitmap output = b.Clone(new Rectangle(0, 0, b.Width, b.Height), b.PixelFormat);
-/*            foreach (int[] x in ret)
-            {
-                for (int i = -2; i <= 2; ++i)
-                {
-                    for (int j = -2; j <= 2; ++j)
-                    {
-                        Color ccc = Color.Red;
-                        output.SetPixel(x[0] + i, x[1] + j, ccc);
-                    }
-                }
-            }*/
+            /*            foreach (int[] x in ret)
+                        {
+                            for (int i = -2; i <= 2; ++i)
+                            {
+                                for (int j = -2; j <= 2; ++j)
+                                {
+                                    Color ccc = Color.Red;
+                                    output.SetPixel(x[0] + i, x[1] + j, ccc);
+                                }
+                            }
+                        }*/
 
+            int idx = 0;
             foreach (int[] task in foundTasks)
             {
-/*
-                for (int i = -2; i <= 2; ++i)
-                {
-                    for (int j = -2; j <= 2; ++j)
-                    { 
-                        output.SetPixel(task[0] + i, task[1] + j, Color.Red);
-                    }
-                }
-*/
+                /*
+                                for (int i = -2; i <= 2; ++i)
+                                {
+                                    for (int j = -2; j <= 2; ++j)
+                                    { 
+                                        output.SetPixel(task[0] + i, task[1] + j, Color.Red);
+                                    }
+                                }
+                */
                 output.SetPixel(task[0], task[1], Color.Red);
 
                 RectangleF rectf = new RectangleF(task[0] - 3, task[1] + 7, 90, 50);
@@ -578,7 +641,7 @@ namespace GGDTaskPic
                 graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-                graphic.DrawString("{" + task[0] + ", " + task[1] + "}", new Font("Tahoma", 7, FontStyle.Bold), new SolidBrush(Color.FromArgb(6, 216, 6)), rectf);
+                graphic.DrawString("" + idx++ + " {" + task[0] + ", " + task[1] + "}", new Font("Tahoma", 7, FontStyle.Bold), new SolidBrush(Color.FromArgb(6, 216, 6)), rectf);
 
                 graphic.Flush();
             }
