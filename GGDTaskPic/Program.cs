@@ -517,15 +517,18 @@ namespace GGDTaskPic
                         // it is yellow
                         List<int[]> cluster = new List<int[]>();
                         GetClusterFromPos(ref b, ref c, i, j, w, h, ref cluster, ref visited);
-                        long xt = 0;
-                        long yt = 0;
+                        double xt = 0;
+                        double yt = 0;
                         foreach (int[] pp in cluster)
                         {
                             xt += pp[0];
                             yt += pp[1];
                         }
-                        xt /= cluster.Count;
-                        yt /= cluster.Count;
+                        xt /= (double)cluster.Count;
+                        yt /= (double)cluster.Count;
+
+                        xt = Math.Round(xt, MidpointRounding.AwayFromZero);
+                        yt = Math.Round(yt, MidpointRounding.AwayFromZero);
                         ret.Add(new int[2] { (int)xt, (int)yt });
                     }
                 }
